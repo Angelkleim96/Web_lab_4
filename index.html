@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Фитнес-трекер | Отслеживайте свой прогресс</title>
+    <meta name="description" content="Современный фитнес-трекер для отслеживания тренировок, анализа прогресса и визуализации статистики">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Шапка сайта -->
+        <header class="header" role="banner">
+            <a href="#dashboard" class="logo logo-link">
+                <i class="fas fa-chart-line"></i>
+                <div>
+                    <h1>Фитнес-трекер</h1>
+                    <span>Отслеживайте свой прогресс</span>
+                </div>
+            </a>
+            <nav class="nav" role="navigation" aria-label="Основная навигация">
+                <a href="#dashboard" class="nav-btn active" data-tab="dashboard" aria-label="Дашборд">
+                    <i class="fas fa-home"></i> Дашборд
+                </a>
+                <a href="#add-workout" class="nav-btn" data-tab="add-workout" aria-label="Добавить тренировку">
+                    <i class="fas fa-plus-circle"></i> Добавить
+                </a>
+                <a href="#statistics" class="nav-btn" data-tab="statistics" aria-label="Статистика">
+                    <i class="fas fa-chart-bar"></i> Статистика
+                </a>
+                <a href="#history" class="nav-btn" data-tab="history" aria-label="История">
+                    <i class="fas fa-history"></i> История
+                </a>
+            </nav>
+        </header>
+
+        <main class="main-content" role="main">
+            <!-- Дашборд с графиками -->
+            <section id="dashboard" class="tab-content active" aria-labelledby="dashboard-tab">
+                <h2><i class="fas fa-tachometer-alt"></i> Обзор прогресса</h2>
+                <div class="dashboard-cards">
+                    <div class="card">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Сожжено калорий</h3>
+                            <p class="card-value" id="total-calories">0</p>
+                            <p class="card-subtitle">За всё время</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                            <i class="fas fa-dumbbell"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Тренировок</h3>
+                            <p class="card-value" id="total-workouts">0</p>
+                            <p class="card-subtitle">Всего выполнено</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Длительность</h3>
+                            <p class="card-value" id="avg-duration">0</p>
+                            <p class="card-subtitle">Минут на тренировку</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Лучший результат</h3>
+                            <p class="card-value" id="best-workout">0</p>
+                            <p class="card-subtitle">ккал</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section-divider">
+                    <div class="divider-line"></div>
+                    <span class="divider-text">Графики прогресса</span>
+                    <div class="divider-line"></div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-wrapper">
+                        <h3>Прогресс по калориям</h3>
+                        <p class="chart-subtitle">Последние 7 дней</p>
+                        <canvas id="calories-chart" role="img" aria-label="График прогресса по калориям"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <h3>Распределение тренировок</h3>
+                        <p class="chart-subtitle">По типам тренировок</p>
+                        <canvas id="workout-types-chart" role="img" aria-label="Диаграмма распределения типов тренировок"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Форма добавления тренировки -->
+            <section id="add-workout" class="tab-content" aria-labelledby="add-workout-tab">
+                <h2><i class="fas fa-plus-circle"></i> Добавить новую тренировку</h2>
+                <div class="form-container">
+                    <form id="workout-form" aria-label="Форма добавления тренировки">
+                        <div class="form-group">
+                            <label for="workout-type"><i class="fas fa-running"></i> Тип тренировки</label>
+                            <select id="workout-type" required aria-required="true">
+                                <option value="">Выберите тип тренировки</option>
+                                <option value="cardio">Кардио (бег, велосипед)</option>
+                                <option value="strength">Силовая (тяжелая атлетика)</option>
+                                <option value="flexibility">Гибкость (йога, растяжка)</option>
+                                <option value="endurance">Выносливость (кроссфит, HIIT)</option>
+                                <option value="other">Другое</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="workout-date"><i class="fas fa-calendar-alt"></i> Дата</label>
+                                <input type="date" id="workout-date" required aria-required="true">
+                            </div>
+                            <div class="form-group">
+                                <label for="workout-duration"><i class="fas fa-clock"></i> Длительность (минут)</label>
+                                <input type="number" id="workout-duration" min="1" max="300" required aria-required="true" placeholder="60">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="calories-burned"><i class="fas fa-fire"></i> Сожжено калорий</label>
+                                <input type="number" id="calories-burned" min="1" max="5000" required aria-required="true" placeholder="350">
+                                <small style="color: #6b7280; font-size: 0.8rem;">* Если оставить пустым, рассчитается автоматически</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="workout-intensity"><i class="fas fa-bolt"></i> Интенсивность</label>
+                                <select id="workout-intensity" required aria-required="true">
+                                    <option value="low">Низкая</option>
+                                    <option value="medium" selected>Средняя</option>
+                                    <option value="high">Высокая</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="workout-notes"><i class="fas fa-sticky-note"></i> Заметки</label>
+                            <textarea id="workout-notes" rows="3" placeholder="Опишите вашу тренировку, самочувствие, достижения..."></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Сохранить тренировку
+                            </button>
+                            <button type="button" id="clear-form" class="btn btn-secondary">
+                                <i class="fas fa-eraser"></i> Очистить форму
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="form-preview">
+                        <h3><i class="fas fa-eye"></i> Предпросмотр тренировки</h3>
+                        <div class="preview-card">
+                            <div class="preview-header">
+                                <h4 id="preview-type">Выберите тип тренировки</h4>
+                                <span class="preview-date" id="preview-date">Сегодня</span>
+                            </div>
+                            <div class="preview-body">
+                                <div class="preview-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span>Длительность: <strong id="preview-duration">0</strong> мин.</span>
+                                </div>
+                                <div class="preview-item">
+                                    <i class="fas fa-fire"></i>
+                                    <span>Калории: <strong id="preview-calories">0</strong> ккал</span>
+                                </div>
+                                <div class="preview-item">
+                                    <i class="fas fa-bolt"></i>
+                                    <span>Интенсивность: <strong id="preview-intensity">Средняя</strong></span>
+                                </div>
+                                <div class="preview-item">
+                                    <i class="fas fa-sticky-note"></i>
+                                    <span>Заметки: <em id="preview-notes">Пока нет заметок</em></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tips">
+                            <h4><i class="fas fa-lightbulb"></i> Советы по эффективным тренировкам</h4>
+                            <ul>
+                                <li>Регулярность важнее интенсивности - лучше заниматься понемногу, но часто</li>
+                                <li>Не забывайте про разминку и заминку для предотвращения травм</li>
+                                <li>Сочетайте разные типы тренировок для комплексного развития</li>
+                                <li>Следите за пульсом во время кардио-тренировок</li>
+                                <li>Пейте воду до, во время и после тренировки</li>
+                                <li>Давайте мышцам время на восстановление между интенсивными тренировками</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Статистика -->
+            <section id="statistics" class="tab-content" aria-labelledby="statistics-tab">
+                <h2><i class="fas fa-chart-bar"></i> Подробная статистика</h2>
+                
+                <div class="stats-filter">
+                    <div class="filter-group">
+                        <label for="stats-period"><i class="fas fa-calendar-week"></i> Период:</label>
+                        <select id="stats-period">
+                            <option value="7">Последние 7 дней</option>
+                            <option value="30" selected>Последние 30 дней</option>
+                            <option value="90">Последние 90 дней</option>
+                            <option value="all">За всё время</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="stats-type"><i class="fas fa-filter"></i> Тип тренировки:</label>
+                        <select id="stats-type">
+                            <option value="all">Все типы</option>
+                            <option value="cardio">Кардио</option>
+                            <option value="strength">Силовые</option>
+                            <option value="flexibility">Гибкость</option>
+                            <option value="endurance">Выносливость</option>
+                            <option value="other">Другое</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stats-card wide">
+                        <h3>Прогресс по калориям</h3>
+                        <canvas id="detailed-calories-chart" role="img" aria-label="Детальный график калорий"></canvas>
+                    </div>
+                    
+                    <div class="stats-card">
+                        <h3>Общая статистика</h3>
+                        <div class="stats-list">
+                            <div class="stat-item">
+                                <span class="stat-label">Всего тренировок:</span>
+                                <span class="stat-value" id="stats-total-workouts">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Всего калорий:</span>
+                                <span class="stat-value" id="stats-total-calories">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Общее время:</span>
+                                <span class="stat-value" id="stats-total-time">0 ч</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Средняя длительность:</span>
+                                <span class="stat-value" id="stats-avg-duration">0 мин</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Средние калории/тренировка:</span>
+                                <span class="stat-value" id="stats-avg-calories">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Самая длинная тренировка:</span>
+                                <span class="stat-value" id="stats-longest">0 мин</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card">
+                        <h3>Эффективность по типам</h3>
+                        <canvas id="efficiency-chart" role="img" aria-label="График эффективности тренировок"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- История тренировок -->
+            <section id="history" class="tab-content" aria-labelledby="history-tab">
+                <h2><i class="fas fa-history"></i> История тренировок</h2>
+                
+                <div class="history-controls">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="history-search" placeholder="Поиск по заметкам или типу...">
+                    </div>
+                    <button id="clear-history" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i> Очистить историю
+                    </button>
+                </div>
+                
+                <div class="history-list" id="workout-history">
+                    <div class="empty-state">
+                        <i class="fas fa-dumbbell"></i>
+                        <p>У вас пока нет добавленных тренировок<br>Начните отслеживать свой прогресс прямо сейчас!</p>
+                        <button class="btn btn-primary go-to-add">
+                            <i class="fas fa-plus-circle"></i> Добавить первую тренировку
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer" role="contentinfo">
+            <p>Фитнес-трекер &copy; 2025</p>
+            <p>Отслеживайте свой прогресс и достигайте новых целей!</p>
+        </footer>
+    </div>
+
+    <!-- Модальное окно для подтверждения удаления -->
+    <div id="delete-modal" class="modal" role="dialog" aria-labelledby="modal-title" aria-hidden="true">
+        <div class="modal-content">
+            <h3><i class="fas fa-exclamation-triangle"></i> Подтверждение удаления</h3>
+            <p>Вы уверены, что хотите удалить эту тренировку?<br>Это действие нельзя отменить.</p>
+            <div class="modal-actions">
+                <button id="confirm-delete" class="btn btn-danger">Удалить</button>
+                <button id="cancel-delete" class="btn btn-secondary">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подключение JavaScript файлов -->
+    <script src="js/models.js"></script>
+    <script src="js/data-manager.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/script.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
