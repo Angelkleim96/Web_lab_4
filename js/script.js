@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Переменные для состояния приложения
     let workoutToDelete = null;
     
-    // ==================== УТИЛИТАРНЫЕ ФУНКЦИИ ====================
+    // Утилитарные функции
     
     // Показать уведомление
     function showNotification(message, type = 'info') {
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return icons[type] || 'dumbbell';
     }
     
-    // ==================== МОДАЛЬНОЕ ОКНО ПРОФИЛЯ ====================
+    // Окно профиля
     function showProfileModal() {
         const profile = DataManager.getProfile();
         
@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // ==================== МОДАЛЬНОЕ ОКНО ПИТАНИЯ ====================
+    // Окно питания
     function showNutritionModal() {
         const today = new Date().toISOString().split('T')[0];
         const profile = DataManager.getProfile();
@@ -290,6 +290,11 @@ document.addEventListener('DOMContentLoaded', function() {
             showNotification('Сначала заполните профиль!', 'error');
             showProfileModal();
             return;
+        }
+        
+        // Функция для обновления отображения (рекурсивный вызов для обновления модалки)
+        function refreshNutritionModal() {
+            showNutritionModal();
         }
         
         const dailyCalories = DataManager.getDailyCalories(today);
@@ -420,9 +425,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const success = DataManager.addFoodToMeal(mealType, today, foodName, grams);
                 if (success) {
                     showNotification(`➕ Добавлено: ${foodName} (${grams}г)`, 'success');
-                    showNutritionModal();
+                    refreshNutritionModal();
                 } else {
-                    showNotification(`❌ Блюдо "${foodName}" не найдено`, 'error');
+                    showNotification(`❌ Блюдо "${foodName}" не найдено в базе`, 'error');
                 }
             });
         });
@@ -433,7 +438,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const mealType = btn.dataset.meal;
                 const index = parseInt(btn.dataset.index);
                 DataManager.removeFoodFromMeal(mealType, today, index);
-                showNutritionModal();
+                refreshNutritionModal();
             });
         });
         
@@ -446,7 +451,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // ==================== НАВИГАЦИЯ ====================
+    // Навигация
     function initNavigation() {
         const navButtons = document.querySelectorAll('.nav-btn');
         
@@ -481,7 +486,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ==================== ФОРМА ТРЕНИРОВКИ ====================
+    // Форма тренировки
     function initForm() {
         const form = document.getElementById('workout-form');
         const clearButton = document.getElementById('clear-form');
@@ -504,6 +509,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 const intensitySelect = document.getElementById('workout-intensity');
                 if (intensitySelect) intensitySelect.value = 'medium';
+                // Очищаем поле калорий и делаем его необязательным визуально
+                const caloriesInput = document.getElementById('calories-burned');
+                if (caloriesInput) {
+                    caloriesInput.value = '';
+                    caloriesInput.placeholder = 'Рассчитается автоматически';
+                }
                 updateFormPreview();
                 showNotification('Форма очищена', 'info');
             });
@@ -523,7 +534,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const type = document.getElementById('workout-type')?.value || '';
         const date = document.getElementById('workout-date')?.value || '';
         const duration = document.getElementById('workout-duration')?.value || '0';
-        const calories = document.getElementById('calories-burned')?.value || '0';
+        const manualCalories = document.getElementById('calories-burned')?.value || '';
         const intensity = document.getElementById('workout-intensity')?.value || 'medium';
         const notes = document.getElementById('workout-notes')?.value || '';
         
@@ -537,7 +548,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (previewType) previewType.textContent = type ? DataManager.getTypeName(type) : 'Выберите тип тренировки';
         if (previewDate) previewDate.textContent = date ? formatDisplayDate(date) : 'Сегодня';
         if (previewDuration) previewDuration.textContent = duration;
-        if (previewCalories) previewCalories.textContent = calories;
+        
+        // Для предпросмотра калорий показываем введённые или подсказку
+        if (previewCalories) {
+            if (manualCalories && parseInt(manualCalories) > 0) {
+                previewCalories.textContent = manualCalories;
+                previewCalories.style.color = '#f59e0b';
+            } else {
+                previewCalories.textContent = 'авто';
+                previewCalories.style.color = '#10b981';
+            }
+        }
+        
         if (previewIntensity) previewIntensity.textContent = DataManager.getIntensityName(intensity);
         if (previewNotes) previewNotes.textContent = notes || 'Пока нет заметок';
     }
@@ -548,7 +570,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const duration = parseInt(document.getElementById('workout-duration')?.value);
         const intensity = document.getElementById('workout-intensity')?.value;
         const notes = document.getElementById('workout-notes')?.value;
-        const manualCalories = document.getElementById('calories-burned')?.value;
+        const manualCaloriesInput = document.getElementById('calories-burned')?.value;
         
         const profile = DataManager.getProfile();
         
@@ -565,16 +587,19 @@ document.addEventListener('DOMContentLoaded', function() {
             return; 
         }
         
-        // Создаём тренировку с автоматическим расчётом калорий
+        // Создаём тренировку с автоматическим расчётом калорий на основе профиля
         const workout = Workout.create(type, date, duration, intensity, notes, profile);
         
-        // Если пользователь ввёл свои калории, используем их
-        if (manualCalories && parseInt(manualCalories) > 0) {
-            workout.calories = parseInt(manualCalories);
+        // Если пользователь ввёл свои калории (и значение > 0), используем их
+        // Иначе оставляем автоматически рассчитанные
+        if (manualCaloriesInput && parseInt(manualCaloriesInput) > 0) {
+            workout.calories = parseInt(manualCaloriesInput);
+            showNotification(`🏋️ Тренировка сохранена! Сожжено: ${workout.calories} ккал (введено вручную)`, 'success');
+        } else {
+            showNotification(`🏋️ Тренировка сохранена! Сожжено: ${workout.calories} ккал (рассчитано автоматически)`, 'success');
         }
         
         DataManager.addWorkout(workout);
-        showNotification(`🏋️ Тренировка сохранена! Сожжено: ${workout.calories} ккал`, 'success');
         
         // Сброс формы
         const form = document.getElementById('workout-form');
@@ -584,6 +609,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (dateInput) dateInput.value = today;
         const intensitySelect = document.getElementById('workout-intensity');
         if (intensitySelect) intensitySelect.value = 'medium';
+        const caloriesInput = document.getElementById('calories-burned');
+        if (caloriesInput) {
+            caloriesInput.value = '';
+            caloriesInput.placeholder = 'Рассчитается автоматически';
+        }
         
         updateFormPreview();
         loadDashboard();
@@ -593,7 +623,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (historyTab) historyTab.click();
     }
     
-    // ==================== ДАШБОРД ====================
+    // Дашборд
     function loadDashboard() {
         const profile = DataManager.getProfile();
         const workouts = DataManager.getWorkouts();
@@ -641,7 +671,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // ==================== СТАТИСТИКА ====================
+    // Статистика
     function initStatisticsFilters() {
         const periodSelect = document.getElementById('stats-period');
         const typeSelect = document.getElementById('stats-type');
@@ -689,7 +719,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
     
-    // ==================== ИСТОРИЯ ====================
+    // История
     function initHistory() {
         const searchInput = document.getElementById('history-search');
         const clearButton = document.getElementById('clear-history');
@@ -776,7 +806,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ==================== МОДАЛЬНОЕ ОКНО УДАЛЕНИЯ ====================
+    // Окно удаления
     function initModal() {
         const confirmBtn = document.getElementById('confirm-delete');
         const cancelBtn = document.getElementById('cancel-delete');
@@ -825,7 +855,7 @@ document.addEventListener('DOMContentLoaded', function() {
         workoutToDelete = null;
     }
     
-    // ==================== ДОБАВЛЕНИЕ КНОПОК ====================
+    // Добавление кнопок
     function addExtraButtons() {
         const nav = document.querySelector('.nav');
         if (!nav) return;
@@ -862,7 +892,7 @@ document.addEventListener('DOMContentLoaded', function() {
         nav.appendChild(nutritionBtn);
     }
     
-    // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+    // Иницилизация
     function initApp() {
         // Устанавливаем дату в форме
         const dateInput = document.getElementById('workout-date');
@@ -870,6 +900,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const today = new Date().toISOString().split('T')[0];
             dateInput.value = today;
             dateInput.max = today;
+        }
+        
+        // Делаем поле калорий необязательным
+        const caloriesField = document.getElementById('calories-burned');
+        if (caloriesField) {
+            caloriesField.required = false;
+            caloriesField.placeholder = 'Рассчитается автоматически';
         }
         
         initNavigation();
